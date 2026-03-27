@@ -218,6 +218,7 @@ struct Preferences {
 
         static let systemWideDefaultKeyboardId = "systemWideDefaultKeyboardId"
         static let isFunctionKeysEnabled = "isFunctionKeysEnabled"
+        static let defaultPunctuationMode = "defaultPunctuationMode"
 
         static let browserAddressDefaultKeyboardId = "browserAddressDefaultKeyboardId"
         static let isActiveWhenLongpressLeftMouse = "isActiveWhenLongpressLeftMouse"
@@ -320,6 +321,9 @@ struct Preferences {
         get { FKeyMode(isFunctionKeysEnabled: isFunctionKeysEnabled) }
         set { isFunctionKeysEnabled = newValue.isFunctionKeysEnabled }
     }
+
+    @CodableUserDefault(Preferences.Key.defaultPunctuationMode)
+    var defaultPunctuationMode = PunctuationMode.disabled
 
     // MARK: - Shortcuts
 
@@ -552,6 +556,23 @@ extension PreferencesVM {
         }
 
         return preferences.functionKeyMode
+    }
+
+    var globalPunctuationMode: PunctuationMode {
+        preferences.defaultPunctuationMode
+    }
+
+    func punctuationMode(for appKind: AppKind) -> PunctuationMode {
+        punctuationMode(for: appKind.getApp())
+    }
+
+    func punctuationMode(for app: NSRunningApplication) -> PunctuationMode {
+        let appMode = getAppCustomization(app: app)?.punctuationMode ?? .global
+        return appMode == .global ? globalPunctuationMode : appMode
+    }
+
+    func shouldForceEnglishPunctuation(for app: NSRunningApplication) -> Bool {
+        punctuationMode(for: app) == .forceEnglish
     }
 }
 

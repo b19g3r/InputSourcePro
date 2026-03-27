@@ -216,9 +216,8 @@ class PunctuationService: ObservableObject {
     
     func shouldEnableForApp(_ app: NSRunningApplication) -> Bool {
         guard let preferencesVM = preferencesVM else { return false }
-        
-        let appRule = preferencesVM.getAppCustomization(app: app)
-        return appRule?.shouldForceEnglishPunctuation == true
+
+        return preferencesVM.shouldForceEnglishPunctuation(for: app)
     }
     
     /// Get current input source with caching to improve performance during rapid typing

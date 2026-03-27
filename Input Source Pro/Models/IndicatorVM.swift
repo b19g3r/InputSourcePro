@@ -99,11 +99,30 @@ final class IndicatorVM: ObservableObject {
     }
 
     private func watchPunctuationRules() {
-        applicationVM.$appKind
+        let appChanges = applicationVM.$appKind
+            .compactMap { $0 }
+            .mapToVoid()
+
+        let preferenceChanges = preferencesVM.$preferences
+            .map(\.defaultPunctuationMode)
+            .removeDuplicates()
+            .mapToVoid()
+
+        let appRuleChanges = NotificationCenter.default
+            .publisher(for: .NSManagedObjectContextObjectsDidChange, object: preferencesVM.container.viewContext)
+            .filter { notification in
+                let updated = notification.userInfo?[NSUpdatedObjectsKey] as? Set<NSManagedObject> ?? []
+                let inserted = notification.userInfo?[NSInsertedObjectsKey] as? Set<NSManagedObject> ?? []
+                return updated.union(inserted).contains { $0 is AppRule }
+            }
+            .mapToVoid()
+
+        Publishers.Merge3(appChanges, preferenceChanges, appRuleChanges)
+            .compactMap { [weak self] _ in self?.applicationVM.appKind }
             .compactMap { $0 }
             .sink { [weak self] appKind in
                 guard let self = self else { return }
-                
+
                 let app = appKind.getApp()
                 if self.punctuationService.shouldEnableForApp(app) {
                     self.logger.debug { "Enabling English punctuation for app: \(app.localizedName ?? app.bundleIdentifier ?? "Unknown")" }

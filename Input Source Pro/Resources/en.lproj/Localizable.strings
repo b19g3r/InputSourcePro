@@ -111,6 +111,7 @@
 "System-Wide" = "System-Wide";
 "Default Keyboard" = "Default Input Source";
 "Default Function Keys" = "Default Function Keys";
+"Default Punctuation" = "Default Punctuation";
 "Function Keys" = "Function Keys";
 "Keyboard Restore Strategy" = "Input Source Restore Strategy";
 "Restore Previously Used Keyboard" = "Restore Previously Used Keyboard";
@@ -121,6 +122,7 @@
 "Punctuation" = "Punctuation";
 "ASCII Punctuation" = "ASCII Punctuation";
 "Force English Punctuation" = "Force English Punctuation";
+"Do Not Force English Punctuation" = "Do Not Force English Punctuation";
 "Use Function Keys" = "Use Function Keys (F1, F2, etc.)";
 "Use Media Keys" = "Use Media Keys (brightness, volume, etc.)";
 "Use Global Setting" = "Use Global Setting";

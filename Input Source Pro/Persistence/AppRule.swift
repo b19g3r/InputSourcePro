@@ -1,5 +1,13 @@
 import Cocoa
 
+enum PunctuationMode: String, CaseIterable, Codable, Identifiable {
+    case global
+    case forceEnglish
+    case disabled
+
+    var id: String { rawValue }
+}
+
 extension AppRule {
     var image: NSImage? {
         guard let path = url else { return nil }
@@ -25,8 +33,17 @@ extension AppRule {
             functionKeyModeRaw = newValue?.rawValue
         }
     }
-    
-    var shouldForceEnglishPunctuation: Bool {
-        return forceEnglishPunctuation
+
+    var punctuationMode: PunctuationMode {
+        get {
+            guard let rawValue = punctuationModeRaw,
+                  let mode = PunctuationMode(rawValue: rawValue)
+            else { return .global }
+
+            return mode
+        }
+        set {
+            punctuationModeRaw = newValue.rawValue
+        }
     }
 }

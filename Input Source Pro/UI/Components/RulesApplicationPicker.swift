@@ -62,9 +62,15 @@ private struct ApplicationPickerRow: View {
                     .opacity(0.7)
             }
 
-            if app.forceEnglishPunctuation {
+            switch app.punctuationMode {
+            case .forceEnglish:
                 RuleSettingIcon(text: "Aa", color: .orange)
                     .opacity(0.7)
+            case .disabled:
+                RuleSettingIcon(text: "Aa", color: .gray)
+                    .opacity(0.7)
+            case .global:
+                EmptyView()
             }
 
             if preferencesVM.needDisplayEnhancedModePrompt(bundleIdentifier: app.bundleId) {

@@ -65,11 +65,11 @@ extension PreferencesVM {
         }
     }
 
-    func setForceEnglishPunctuation(_ appCustomization: AppRule?, _ forceEnglishPunctuation: Bool) {
+    func setPunctuationMode(_ appCustomization: AppRule?, _ mode: PunctuationMode) {
         guard let appCustomization = appCustomization else { return }
 
         saveContext {
-            appCustomization.forceEnglishPunctuation = forceEnglishPunctuation
+            appCustomization.punctuationMode = mode
         }
     }
 

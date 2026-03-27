@@ -23,8 +23,8 @@ struct ApplicationDetail: View {
     @State var doRestoreKeyboardState = NSToggleViewState.off
     @State var doNotRestoreKeyboardState = NSToggleViewState.off
     @State var hideIndicator = NSToggleViewState.off
-    @State var forceEnglishPunctuation = NSToggleViewState.off
     @State var functionKeyModeItem: PickerItem?
+    @State var punctuationModeItem: PickerItem?
 
     var mixed: Bool {
         Set(selectedApp.map { $0.forcedKeyboard?.id }).count > 1
@@ -48,11 +48,31 @@ struct ApplicationDetail: View {
         PickerItem(id: "default", title: "Use Global Setting".i18n(), toolTip: nil)
     }
 
+    var punctuationItems: [PickerItem] {
+        [isPunctuationModeMixed ? PickerItem.mixed : nil, punctuationDefaultItem].compactMap { $0 }
+            + punctuationOptionItems
+    }
+
+    var punctuationDefaultItem: PickerItem {
+        PickerItem(id: PunctuationMode.global.rawValue, title: "Use Global Setting".i18n(), toolTip: nil)
+    }
+
+    var punctuationOptionItems: [PickerItem] {
+        [
+            PickerItem(id: PunctuationMode.forceEnglish.rawValue, title: "Force English Punctuation".i18n(), toolTip: nil),
+            PickerItem(id: PunctuationMode.disabled.rawValue, title: "Do Not Force English Punctuation".i18n(), toolTip: nil),
+        ]
+    }
+
     var functionKeyOptionItems: [PickerItem] {
         [
             PickerItem(id: FKeyMode.functionKeys.rawValue, title: "Use Function Keys".i18n(), toolTip: nil),
             PickerItem(id: FKeyMode.mediaKeys.rawValue, title: "Use Media Keys".i18n(), toolTip: nil),
         ]
+    }
+
+    var isPunctuationModeMixed: Bool {
+        Set(selectedApp.map { $0.punctuationMode }).count > 1
     }
 
     var body: some View {
@@ -157,16 +177,20 @@ struct ApplicationDetail: View {
                 
                 HStack {
                     RuleSettingIcon(text: "Aa", color: .orange)
-                    NSToggleView(
-                        label: "Force English Punctuation".i18n(),
-                        state: forceEnglishPunctuation,
-                        onStateUpdate: handleToggleForceEnglishPunctuation
+                    PopUpButtonPicker<PickerItem?>(
+                        items: punctuationItems,
+                        isItemEnabled: { $0?.id != "mixed" },
+                        isItemSelected: { $0 == punctuationModeItem },
+                        getTitle: { $0?.title ?? "" },
+                        getToolTip: { $0?.toolTip },
+                        onSelect: handleSelectPunctuationMode
                     )
-                    .fixedSize()
                     .disabled(!preferencesVM.preferences.isEnhancedModeEnabled)
                 }
-                
-                if selectedApp.contains(where: { $0.forceEnglishPunctuation }) && !PermissionsVM.checkInputMonitoring(prompt: false) {
+
+                if selectedApp.contains(where: { $0.punctuationMode == .forceEnglish }) &&
+                    !PermissionsVM.checkInputMonitoring(prompt: false)
+                {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("This feature requires input monitoring permission to work".i18n())
 
@@ -194,13 +218,21 @@ struct ApplicationDetail: View {
             Spacer()
         }
         .disabled(selectedApp.isEmpty)
+        .onAppear {
+            updateForceKeyboardId()
+            updateDoRestoreKeyboardState()
+            updateDoNotRestoreKeyboardState()
+            updateHideIndicatorState()
+            updateFunctionKeyModeItem()
+            updatePunctuationModeItem()
+        }
         .onChange(of: selectedApp) { _ in
             updateForceKeyboardId()
             updateDoRestoreKeyboardState()
             updateDoNotRestoreKeyboardState()
             updateHideIndicatorState()
-            updateForceEnglishPunctuationState()
             updateFunctionKeyModeItem()
+            updatePunctuationModeItem()
         }
     }
 
@@ -244,16 +276,6 @@ struct ApplicationDetail: View {
         }
     }
 
-    func updateForceEnglishPunctuationState() {
-        let stateSet = Set(selectedApp.map { $0.forceEnglishPunctuation })
-
-        if stateSet.count > 1 {
-            forceEnglishPunctuation = .mixed
-        } else {
-            forceEnglishPunctuation = stateSet.first == true ? .on : .off
-        }
-    }
-
     func updateFunctionKeyModeItem() {
         let modeSet = Set(selectedApp.map { $0.functionKeyMode })
 
@@ -268,6 +290,17 @@ struct ApplicationDetail: View {
         }
 
         functionKeyModeItem = functionKeyItem(for: mode)
+    }
+
+    func updatePunctuationModeItem() {
+        let modeSet = Set(selectedApp.map { $0.punctuationMode })
+
+        if modeSet.count > 1 {
+            punctuationModeItem = PickerItem.mixed
+            return
+        }
+
+        punctuationModeItem = punctuationItem(for: modeSet.first ?? .global)
     }
 
     func handleSelect(_ index: Int) {
@@ -317,23 +350,6 @@ struct ApplicationDetail: View {
         }
     }
 
-    func handleToggleForceEnglishPunctuation() -> NSControl.StateValue {
-        switch forceEnglishPunctuation {
-        case .on:
-            selectedApp.forEach { preferencesVM.setForceEnglishPunctuation($0, false) }
-            forceEnglishPunctuation = .off
-            return .off
-        case .off, .mixed:
-            selectedApp.forEach { preferencesVM.setForceEnglishPunctuation($0, true) }
-            forceEnglishPunctuation = .on
-            
-            if !PermissionsVM.checkInputMonitoring(prompt: false) {
-                PermissionsVM.checkInputMonitoring(prompt: true)
-            }
-            return .on
-        }
-    }
-
     func handleSelectFunctionKeyMode(_ index: Int) {
         let selection = functionKeyItems[index]
         functionKeyModeItem = selection
@@ -354,8 +370,24 @@ struct ApplicationDetail: View {
         selectedApp.forEach { preferencesVM.setFunctionKeyMode($0, mode) }
     }
 
+    func handleSelectPunctuationMode(_ index: Int) {
+        let selection = punctuationItems[index]
+        punctuationModeItem = selection
+
+        let mode = PunctuationMode(rawValue: selection.id) ?? .global
+        selectedApp.forEach { preferencesVM.setPunctuationMode($0, mode) }
+
+        if mode == .forceEnglish && !PermissionsVM.checkInputMonitoring(prompt: false) {
+            PermissionsVM.checkInputMonitoring(prompt: true)
+        }
+    }
+
     func functionKeyItem(for mode: FKeyMode) -> PickerItem {
         functionKeyOptionItems.first(where: { $0.id == mode.rawValue }) ?? functionKeyDefaultItem
+    }
+
+    func punctuationItem(for mode: PunctuationMode) -> PickerItem {
+        punctuationOptionItems.first(where: { $0.id == mode.rawValue }) ?? punctuationDefaultItem
     }
 
     func restoreStrategyName(strategy: KeyboardRestoreStrategy) -> String {

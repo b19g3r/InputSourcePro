@@ -111,6 +111,7 @@
 "System-Wide" = "시스템 전체";
 "Default Keyboard" = "기본 입력 소스";
 "Default Function Keys" = "기본 기능 키";
+"Default Punctuation" = "기본 구두점";
 "Function Keys" = "기능 키";
 "Keyboard Restore Strategy" = "입력 소스 복원 전략";
 "Restore Previously Used Keyboard" = "이전에 사용한 입력 소스 복원";
@@ -121,6 +122,7 @@
 "Punctuation" = "구두점";
 "ASCII Punctuation" = "ASCII 구두점";
 "Force English Punctuation" = "영어 구두점 강제 사용";
+"Do Not Force English Punctuation" = "영어 구두점 강제 사용 안 함";
 "Use Function Keys" = "기능 키 사용 (F1, F2 등)";
 "Use Media Keys" = "미디어 키 사용 (밝기, 음량 등)";
 "Use Global Setting" = "전역 설정 사용";

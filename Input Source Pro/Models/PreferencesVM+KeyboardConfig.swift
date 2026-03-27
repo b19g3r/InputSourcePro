@@ -78,6 +78,10 @@ extension PreferencesVM {
 }
 
 extension PreferencesVM {
+    private enum MigrationBuild {
+        static let punctuationMode = 615
+    }
+
     struct DeprecatedKeyboardSettings: Codable & Equatable & Identifiable {
         let id: String
 
@@ -91,6 +95,8 @@ extension PreferencesVM {
                 $0.indicatorInfo = $0.isShowInputSourcesLabel ? .iconAndTitle : .iconOnly
             }
         }
+
+        migratePunctuationModeIfNeed()
     }
 
     func migrateBoutiqueIfNeed() {
@@ -124,5 +130,26 @@ extension PreferencesVM {
                 }
             }
             .store(in: cancelBag)
+    }
+
+    private func migratePunctuationModeIfNeed() {
+        guard preferences.prevInstalledBuildVersion <= MigrationBuild.punctuationMode else { return }
+
+        let request = AppRule.fetchRequest()
+
+        do {
+            let appRules = try container.viewContext.fetch(request)
+            let pendingRules = appRules.filter { $0.punctuationModeRaw == nil }
+
+            guard !pendingRules.isEmpty else { return }
+
+            saveContext {
+                pendingRules.forEach { appRule in
+                    appRule.punctuationMode = appRule.forceEnglishPunctuation ? .forceEnglish : .global
+                }
+            }
+        } catch {
+            print("migratePunctuationModeIfNeed error: \(error.localizedDescription)")
+        }
     }
 }

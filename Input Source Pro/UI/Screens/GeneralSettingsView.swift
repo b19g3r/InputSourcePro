@@ -29,6 +29,19 @@ struct GeneralSettingsView: View {
             }
         )
 
+        let defaultPunctuationBinding = Binding(
+            get: { preferencesVM.preferences.defaultPunctuationMode == .forceEnglish },
+            set: { isEnabled in
+                preferencesVM.update {
+                    $0.defaultPunctuationMode = isEnabled ? .forceEnglish : .disabled
+                }
+
+                if isEnabled && !PermissionsVM.checkInputMonitoring(prompt: false) {
+                    PermissionsVM.checkInputMonitoring(prompt: true)
+                }
+            }
+        )
+
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 SettingsSection(title: "Also by Runju") {
@@ -74,6 +87,41 @@ struct GeneralSettingsView: View {
                             Text("Function Keys Description".i18n())
 
                             Spacer()
+                        }
+                    }
+                    .padding()
+                }
+
+                SettingsSection(title: "Default Punctuation") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Toggle("", isOn: defaultPunctuationBinding)
+                                .disabled(!preferencesVM.preferences.isEnhancedModeEnabled)
+
+                            Text("Force English Punctuation".i18n())
+
+                            Spacer()
+
+                            EnhancedModeRequiredBadge()
+                        }
+
+                        if preferencesVM.preferences.defaultPunctuationMode == .forceEnglish &&
+                            !PermissionsVM.checkInputMonitoring(prompt: false)
+                        {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("This feature requires input monitoring permission to work".i18n())
+
+                                HStack {
+                                    Spacer()
+                                    Button("Open Permission Settings".i18n()) {
+                                        NSWorkspace.shared.openInputMonitoringPreferences()
+                                    }
+                                }
+                            }
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(NSColor.background1.color)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                     }
                     .padding()

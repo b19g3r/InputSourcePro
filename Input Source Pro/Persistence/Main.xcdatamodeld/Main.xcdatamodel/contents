@@ -10,6 +10,7 @@
         <attribute name="functionKeyModeRaw" optional="YES" attributeType="String"/>
         <attribute name="hideIndicator" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="inputSourceId" optional="YES" attributeType="String"/>
+        <attribute name="punctuationModeRaw" optional="YES" attributeType="String"/>
         <attribute name="removed" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="url" attributeType="URI"/>
     </entity>

@@ -113,6 +113,7 @@
 "System-Wide" = "全局";
 "Default Keyboard" = "默认输入法";
 "Default Function Keys" = "默认功能键";
+"Default Punctuation" = "默认标点符号";
 "Function Keys" = "功能键";
 "Keyboard Restore Strategy" = "输入法恢复策略";
 "Restore Previously Used Keyboard" = "自动恢复应用上次使用的输入法";
@@ -123,6 +124,7 @@
 "Punctuation" = "标点符号";
 "ASCII Punctuation" = "ASCII 标点符号";
 "Force English Punctuation" = "强制使用英文标点符号";
+"Do Not Force English Punctuation" = "不要强制使用英文标点符号";
 "Use Function Keys" = "使用功能键 (F1、F2 等)";
 "Use Media Keys" = "使用媒体键 (亮度、音量等)";
 "Use Global Setting" = "使用全局设置";
