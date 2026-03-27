@@ -559,7 +559,7 @@ extension PreferencesVM {
     }
 
     var globalPunctuationMode: PunctuationMode {
-        preferences.defaultPunctuationMode
+        preferences.defaultPunctuationMode ?? .disabled
     }
 
     func punctuationMode(for appKind: AppKind) -> PunctuationMode {
