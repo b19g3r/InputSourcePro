@@ -17,14 +17,28 @@ class PunctuationService: ObservableObject {
     private var inputSourceCacheTime: TimeInterval = 0
     private let inputSourceCacheTimeout: TimeInterval = 0.5 // Cache for 500ms
     
-    private let cjkvToEnglishPunctuationMap: [UInt16: (normal: String, shifted: String)] = [
+    private let cjkvToEnglishPunctuationMap: [UInt16: (normal: String?, shifted: String?)] = [
         43: (",", "<"),    // 0x2B - Comma key
         47: (".", ">"),    // 0x2F - Period key
         41: (";", ":"),    // 0x29 - Semicolon key
+        44: ("/", "?"),    // 0x2C - Slash key
         39: ("'", "\""),   // 0x27 - Quote key
-        42: ("\\", "|"),   // 0x2A - Backslash key
         33: ("[", "{"),    // 0x21 - Left Bracket key
-        30: ("]", "}")     // 0x1E - Right Bracket key
+        30: ("]", "}"),    // 0x1E - Right Bracket key
+        25: (nil, "("),    // 0x19 - 9 key
+        29: (nil, ")"),    // 0x1D - 0 key
+        18: (nil, "!"),    // 0x12 - 1 key
+        19: (nil, "@"),    // 0x13 - 2 key
+        20: (nil, "#"),    // 0x14 - 3 key
+        21: (nil, "$"),    // 0x15 - 4 key
+        23: (nil, "%"),    // 0x17 - 5 key
+        22: (nil, "^"),    // 0x16 - 6 key
+        26: (nil, "&"),    // 0x1A - 7 key
+        28: (nil, "*"),    // 0x1C - 8 key
+        27: (nil, "_"),    // 0x1B - Minus key
+        24: (nil, "+"),    // 0x18 - Equal key
+        50: ("`", "~"),    // 0x32 - Grave key
+        42: ("\\", "|")    // 0x2A - Backslash key
     ]
     
     init(preferencesVM: PreferencesVM) {
@@ -158,15 +172,27 @@ class PunctuationService: ObservableObject {
             return Unmanaged.passUnretained(event)
         }
         
-        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-        
+        let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+
+        let hasCommand = event.flags.contains(.maskCommand)
+        let hasOption = event.flags.contains(.maskAlternate)
+        let hasControl = event.flags.contains(.maskControl)
+        let hasFn = event.flags.contains(.maskSecondaryFn)
+
+        guard !hasCommand && !hasOption && !hasControl && !hasFn else {
+            return Unmanaged.passUnretained(event)
+        }
+
         // Check if this is a punctuation key we want to intercept
-        guard let mapping = cjkvToEnglishPunctuationMap[UInt16(keyCode)] else {
+        guard let mapping = cjkvToEnglishPunctuationMap[keyCode] else {
             // Not a punctuation key we're interested in
             return Unmanaged.passUnretained(event)
         }
-        
+
         let englishReplacement = event.flags.contains(.maskShift) ? mapping.shifted : mapping.normal
+        guard let englishReplacement else {
+            return Unmanaged.passUnretained(event)
+        }
         
         // Check if we're in a Chinese/CJKV input method (with caching for performance)
         let currentInputSource = getCachedCurrentInputSource()
